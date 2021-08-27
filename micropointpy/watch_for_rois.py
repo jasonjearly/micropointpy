@@ -125,7 +125,8 @@ def watch_rois(inpath,delay=0.1,cur_settings={"reps":1,"atten":58,"samplng":1,"r
                         if not cur_settings["no_wait"]:
                             pass
                         # print(current_roi)
-                        current_roi = mp.polygon_fill(current_roi,uncal=cur_settings["run_uncal"],sampling=cur_settings["sampling"], points_only=True)
+                        current_roi = mp.polygon_fill(current_roi,uncal=cur_settings["run_uncal"],
+                        sampling=cur_settings["sampling"], points_only=True)
                         cur_settings["run_uncal"] = True
                         print('Current sampling = %d' %cur_settings['sampling'])
                         # print(current_roi)
@@ -146,6 +147,7 @@ def watch_rois(inpath,delay=0.1,cur_settings={"reps":1,"atten":58,"samplng":1,"r
                     touch(continue_file)
                 os.rename(os.path.join(inpath,newFiles[0][0]),os.path.join(used_dir,str(time.time())+'_'+newFiles[0][0]))
 
+
 if __name__ == '__main__':
     args = sys.argv
     if len(args)>1:
@@ -160,5 +162,11 @@ if __name__ == '__main__':
             watch_rois(inpath=inpath)
         print("Fin.")
     else:
-        print("No arguments provided.\nPlease provide a directory, and (optionally) json formatted current setitngs.\nDefault settings of form:{'reps':1,'atten':58,'samplng':1,'run_uncal':False,'roi_type':'SHAPE','no_wait':False}")
+        print("No arguments provided.\nPlease provide a directory, and (optionally) json formatted current setitngs."
+        "\nDefault settings of form:{'reps':1,'atten':58,'samplng':1,'run_uncal':False,'roi_type':'SHAPE','no_wait':False}")
+else:
+    #Check in user folder for micropointpy folder (where configuration and calibration files are saved)
+    config_path = os.path.join(os.path.expanduser('~'),'.micropointpy')
+    if not os.path.isdir(config_path):
+        os.mkdir(config_path)
     

@@ -10,8 +10,9 @@ import json
 class Micropoint:
     def __init__(self):
         # Must generalise the paths for the calibration files.
-        self.calFile = r"C:\MicroPoint\MicroPoint-Calibration.npy"
-        self.offsetFile = r"C:\MicroPoint\Offset-Calibration.json"
+        config_path = os.path.join(os.path.expanduser('~'),'.micropointpy','calibrations')
+        self.calFile = os.path.join(config_path,'MicroPoint-Calibration.npy')
+        self.offsetFile = os.path.join(config_path,'Offset-Calibration.json')
         if not os.path.exists(self.offsetFile):
             self.x_offset = 0
             self.y_offset = 0
