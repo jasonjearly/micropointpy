@@ -74,6 +74,7 @@ for point in get_calibration_positions():
 
 points = get_power_strip()
 powers  = range(0,90)
+power_strips = [(182,178,79,3,0),(128,178,79,3,1),(74,79,178,3,0)]
 i=0
 for strip in power_strips:
     points = get_power_strip(*strip)
