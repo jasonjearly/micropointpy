@@ -52,8 +52,8 @@ def write_mp_file(roi,fnum,reps=2,atten=55,sampling=1,roi_type='SHAPE', run_unca
     return to_write
 
 
-mp = micropoint()
-mp.set_attenuator(55)
+mp = Micropoint()
+mp.set_attenuator(60)
 points = [[192,64],[192,128],[192,192],[64,192],[64,128],[64,64]]
 x_offset = 0
 y_offset = 0

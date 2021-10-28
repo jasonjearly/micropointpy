@@ -8,9 +8,9 @@ import math
 import json
 
 class Micropoint:
-    def __init__(self):
-        # Must generalise the paths for the calibration files.
-        config_path = os.path.join(os.path.expanduser('~'),'.micropointpy','calibrations')
+    def __init__(self, config_path=False, port='COM12'):
+        if not config_path:
+            config_path = os.path.join(os.path.expanduser('~'),'.micropointpy','cal')
         self.calFile = os.path.join(config_path,'MicroPoint-Calibration.npy')
         self.offsetFile = os.path.join(config_path,'Offset-Calibration.json')
         if not os.path.exists(self.offsetFile):
@@ -29,7 +29,7 @@ class Micropoint:
                 self.y_offset = 0
         self.calibration = 0
         self.load_cal(self.calFile)
-        self.port = 'COM12'
+        self.port = port
         self.baud = '9600'
         self.timeout = 0.01
         self.mp = self.micropoint()

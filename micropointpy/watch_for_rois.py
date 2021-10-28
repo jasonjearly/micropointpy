@@ -65,34 +65,34 @@ def touch(path):
         with open(path, 'a'):
             os.utime(path, None)
         return path
-    
+
 def watch_rois(inpath,delay=0.1,cur_settings={"reps":1,"atten":58,"samplng":1,"run_uncal":False,"roi_type":'SHAPE','no_wait':False}):
-    inpath = "H:\\Data\\Francois\\rois\\" #Changed to my folder (Jason)
     leave_continue = True #Leave a continue.temp file in the watch folder.
-    continue_file = os.path.join(inpath,'continue.temp')
-    mp = Micropoint()
+    watch_dir = os.path.join(inpath,'watch')
+    continue_file = os.path.join(watch_dir,'continue.temp')
+    mp = Micropoint(config_path=os.path.join(inpath,'cal'))
     time.sleep(5)
     mp.find_attenuator_position()
     # time.sleep(5)
     mp.set_attenuator(cur_settings['atten'])
     live = True
-    oldFiles = getFiles(inpath,'.json')
+    oldFiles = getFiles(watch_dir,'.json')
     print('Repititions =\t%d' %mp.reps)
-    used_dir = os.path.join(inpath,'Used')
-    unused_dir = os.path.join(inpath,'Unused')
+    used_dir = os.path.join(watch_dir,'Used')
+    unused_dir = os.path.join(watch_dir,'Unused')
     if not os.path.exists(used_dir):
         os.makedirs(used_dir)
     if not os.path.exists(unused_dir):
         os.makedirs(unused_dir)
     while live:
-        t1 = watch_modified(inpath, delay=delay)
-        print('%s was modified at %s' %(str(inpath), str(t1)))
-        currentFiles = getFiles(inpath,'.json')
+        t1 = watch_modified(watch_dir, delay=delay)
+        print('%s was modified at %s' %(str(watch_dir), str(t1)))
+        currentFiles = getFiles(watch_dir,'.json')
         newFiles = [i for i in currentFiles if i not in oldFiles]
         print(newFiles)
         oldFiles = currentFiles
         if len(newFiles)>0:
-            newFiles = [(i,get_mtime(os.path.join(inpath,i))) for i in newFiles]
+            newFiles = [(i,get_mtime(os.path.join(watch_dir,i))) for i in newFiles]
             if len(newFiles)>1:
                 newFiles.sort(key=lambda tup: tup[1], reverse=True)
             print(newFiles)
@@ -104,7 +104,7 @@ def watch_rois(inpath,delay=0.1,cur_settings={"reps":1,"atten":58,"samplng":1,"r
             if live:
                 time.sleep(0.1)
                 print(newFiles)
-                with open(os.path.join(inpath, newFiles[0][0]),'r') as f:
+                with open(os.path.join(watch_dir, newFiles[0][0]),'r') as f:
                     try: container = json.load(f)
                     except: continue
                 print(container)
@@ -145,11 +145,35 @@ def watch_rois(inpath,delay=0.1,cur_settings={"reps":1,"atten":58,"samplng":1,"r
                         print('Fired %d times in %d seconds.\n~inf Hz' %(len(current_roi),tot_time))
                 if leave_continue:
                     touch(continue_file)
-                os.rename(os.path.join(inpath,newFiles[0][0]),os.path.join(used_dir,str(time.time())+'_'+newFiles[0][0]))
+                os.rename(os.path.join(watch_dir,newFiles[0][0]),os.path.join(used_dir,str(time.time())+'_'+newFiles[0][0]))
 
+def check_config(in_dir=False):
+    if not in_dir:
+        in_dir = os.path.join(os.path.expanduser('~'),'.micropointpy')
+        print("No input directory provided.\nCreating %s"%in_dir)
+    cal_dir = os.path.join(in_dir,'cal')
+    watch_dir = os.path.join(in_dir,'watch')
+    settings_path = os.path.join(in_dir,'mp_settings.json')
+    old_settings = False
+    if not os.path.isdir(config_path):
+        os.mkdir(config_path)
+    if not os.path.isdir(cal_dir):
+        os.mkdir(cal_dir)
+        print('No calibration data found. Created directory as %s.\nRun calibration or place calibration file in directory before running.' %cal_dir)
+    if not os.path.isdir(watch_dir):
+        print('No watch directory.\nMaking new dir at %s.'%watch_dir)
+        os.mkdir(watch_dir)
+    if os.path.exists(os.path.join(in_dir,'mp_settings.json')):
+        with open(settings_path, 'r') as f:
+            old_settings = json.load(f)
+    return({"in_dir":in_dir,"cal_dir":cal_dir,"watch_dir":watch_dir,"settings":old_settings})
 
 if __name__ == '__main__':
+    config_path = os.path.join(os.path.expanduser('~'),'.micropointpy')
+    if not os.path.isdir(config_path):
+        os.mkdir(config_path)
     args = sys.argv
+    paths = check_config()
     if len(args)>1:
         inpath = args[1]
         try:
@@ -159,14 +183,18 @@ if __name__ == '__main__':
         if opt:
             watch_rois(inpath=inpath,cur_settings=opt)
         else:
-            watch_rois(inpath=inpath)
+            if paths.get('settings'):
+                watch_rois(inpath=paths.get('in_dir'),cur_settings=paths.get('settings'))
+            else:
+                watch_rois(inpath=inpath)
         print("Fin.")
     else:
         print("No arguments provided.\nPlease provide a directory, and (optionally) json formatted current setitngs."
         "\nDefault settings of form:{'reps':1,'atten':58,'samplng':1,'run_uncal':False,'roi_type':'SHAPE','no_wait':False}")
 else:
+    paths = check_config()
+    if paths.get('settings'):
+        watch_rois(inpath=paths.get('in_dir'),cur_settings=paths.get('settings'))
+    else:
+        watch_rois(inpath=paths.get('in_dir'))
     #Check in user folder for micropointpy folder (where configuration and calibration files are saved)
-    config_path = os.path.join(os.path.expanduser('~'),'.micropointpy')
-    if not os.path.isdir(config_path):
-        os.mkdir(config_path)
-    
